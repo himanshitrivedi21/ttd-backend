@@ -19,6 +19,28 @@ import time
 
 from scraper import TTDLiveScraper
 from engine import TTDCrowdEngine
+# ========================================================
+# HTML PAGES - Bulletproof file paths for cloud!
+# ========================================================
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+@app.route('/dashboard')
+def dashboard_page():
+    return send_file(os.path.join(BASE_DIR, 'dashboard.html'))
+
+@app.route('/places')
+def places_page():
+    return send_file(os.path.join(BASE_DIR, 'places.html'))
+
+@app.route('/rooms')
+def rooms_page():
+    return send_file(os.path.join(BASE_DIR, 'rooms.html'))
+
+@app.route('/phrases')
+def phrases_page():
+    return send_file(os.path.join(BASE_DIR, 'phrases.html'))
 
 app = Flask(__name__)
 CORS(app)  # Allows Android + Web to call this API

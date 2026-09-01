@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛕 TTD Command Center - LIVE</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        background: #0f1419;
+        color: #fff;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        padding: 15px;
+    }
+    .header {
+        background: linear-gradient(135deg, #FF6B00, #FF8C00);
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 15px rgba(255,107,0,0.3);
+    }
+    .header h1 { font-size: 26px; }
+    .header .live-dot {
+        display: inline-block;
+        width: 12px; height: 12px;
+        background: #00FF88;
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+        margin-right: 8px;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .card {
+        background: #1a2332;
+        border-radius: 12px;
+        padding: 18px;
+        border-left: 4px solid #FF6B00;
+    }
+    .card h2 {
+        font-size: 16px;
+        color: #FFD700;
+        margin-bottom: 12px;
+    }
+    .full-width { grid-column: 1 / -1; }
+    .big-number {
+        font-size: 36px;
+        font-weight: bold;
+        color: #FF6B00;
+    }
+    .queue-start {
+        font-size: 28px;
+        color: #00FF88;
+        font-weight: bold;
+    }
+    .wait-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        margin: 6px 0;
+        border-radius: 8px;
+        font-size: 16px;
+    }
+    .wait-free  { background: rgba(255,0,0,0.15); border-left: 4px solid #FF0000; }
+    .wait-ssd   { background: rgba(255,215,0,0.1); border-left: 4px solid #FFD700; }
+    .wait-300   { background: rgba(0,255,136,0.1); border-left: 4px solid #00FF88; }
+
+    /* THE HEATMAP - 31 compartment grid! */
+    .comp-grid {
+        display: grid;
+        grid-template-columns: repeat(11, 1fr);
+        gap: 5px;
+        margin-top: 10px;
+    }
+    .comp-box {
+        aspect-ratio: 1;
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .comp-box:hover { transform: scale(1.15); }
+    .comp-full    { background: #FF0000; }
+    .comp-almost  { background: #FF6B00; }
+    .comp-partial { background: #FFD700; color: #000; }
+    .comp-low     { background: #88FF00; color: #000; }
+    .comp-empty   { background: #2D3561; color: #888; }
+    .floor-label {
+        grid-column: 1 / -1;
+        color: #FFD700;
+        font-size: 13px;
+        margin-top: 8px;
+        font-weight: bold;
+    }
+    .route-flow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        font-size: 14px;
+    }
+    .route-step {
+        background: #2D3561;
+        padding: 8px 14px;
+        border-radius: 20px;
+    }
+    .route-arrow { color: #FF6B00; font-weight: bold; }
+    .segment {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px;
+        margin: 6px 0;
+        border-radius: 8px;
+        background: #2D3561;
+    }
+    .seg-active { border-left: 4px solid #FF0000; }
+    .seg-closed { border-left: 4px solid #00FF88; opacity: 0.6; }
+    .guide-box {
+        background: #16213E;
+        padding: 12px;
+        border-radius: 8px;
+        margin: 8px 0;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    .stat-box {
+        text-align: center;
+        padding: 15px;
+    }
+    .stat-label { color: #888; font-size: 13px; }
+    .hourly {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 10px 0;
+    }
+    .hour-box {
+        min-width: 90px;
+        background: #2D3561;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    .hour-box.best {
+        border: 2px solid #00FF88;
+        background: rgba(0,255,136,0.1);
+    }
+    .footer {
+        text-align: center;
+        color: #555;
+        margin-top: 20px;
+        font-size: 12px;
+    }
+    #lastUpdate { color: #00FF88; font-size: 13px; }
+    @media (max-width: 768px) {
+        .grid { grid-template-columns: 1fr; }
+        .comp-grid { grid-template-columns: repeat(6, 1fr); }
+    }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🛕 TTD PILGRIM COMMAND CENTER</h1>
+    <p><span class="live-dot"></span>LIVE DATA • <span id="lastUpdate">Connecting...</span></p>
+</div>
+
+<div class="grid">
+
+    <!-- QUEUE START + WAITS -->
+    <div class="card">
+        <h2>📍 Queue Status RIGHT NOW</h2>
+        <p style="color:#888; font-size:13px;">New devotees join at:</p>
+        <p class="queue-start" id="queueStart">...</p>
+        <p style="margin-top:12px; color:#888; font-size:13px;">If you join now:</p>
+        <p class="big-number" id="waitNow">...</p>
+    </div>
+
+    <!-- TICKET WAITS -->
+    <div class="card">
+        <h2>⏱️ Wait Times By Ticket</h2>
+        <div class="wait-row wait-free">
+            <span>🔴 Free Darshan</span>
+            <b id="waitFree">...</b>
+        </div>
+        <div class="wait-row wait-ssd">
+            <span>🟡 SSD Token</span>
+            <b id="waitSsd">...</b>
+        </div>
+        <div class="wait-row wait-300">
+            <span>🟢 ₹300 Ticket</span>
+            <b id="wait300">...</b>
+        </div>
+        <div class="stat-box" style="margin-top:10px;">
+            <div class="big-number" id="crowdEmoji">🟠</div>
+            <div class="stat-label" id="crowdLabel">...</div>
+        </div>
+    </div>
+
+    <!-- LIVE STATS -->
+    <div class="card full-width">
+        <h2>📊 Live Statistics</h2>
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;">
+            <div class="stat-box">
+                <div class="big-number" id="pilgrimsWaiting">...</div>
+                <div class="stat-label">👥 In VQC Now</div>
+            </div>
+            <div class="stat-box">
+                <div class="big-number" id="darshanDone">...</div>
+                <div class="stat-label">✅ Darshan Done</div>
+            </div>
+            <div class="stat-box">
+                <div class="big-number" id="compActive">...</div>
+                <div class="stat-label">🚪 Compartments</div>
+            </div>
+            <div class="stat-box">
+                <div class="big-number" id="temp">...</div>
+                <div class="stat-label">🌡️ Weather</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPARTMENT HEATMAP -->
+    <div class="card full-width">
+        <h2>🏢 VQC Compartment Heatmap (31 Rooms - LIVE)</h2>
+        <div class="comp-grid" id="compGrid"></div>
+        <p style="margin-top:10px; font-size:12px; color:#888;">
+            🔴 FULL &nbsp; 🟠 ALMOST FULL &nbsp; 🟡 PARTIAL &nbsp; ⬛ EMPTY
+        </p>
+    </div>
+
+    <!-- OUTDOOR SEGMENTS -->
+    <div class="card">
+        <h2>🌿 Outdoor Queue Segments</h2>
+        <div id="outdoorSegments"></div>
+    </div>
+
+    <!-- BEGINNER GUIDE -->
+    <div class="card">
+        <h2>🆕 First-Timer Guide (Queue Start Location)</h2>
+        <div id="guideContent"></div>
+    </div>
+
+    <!-- JOURNEY ROUTE -->
+    <div class="card full-width">
+        <h2>🚶 Pilgrim Journey Route (Forward Only)</h2>
+        <div class="route-flow" id="routeFlow"></div>
+    </div>
+
+    <!-- HOURLY FORECAST -->
+    <div class="card full-width">
+        <h2>📈 Today's Hour-by-Hour Forecast</h2>
+        <div class="hourly" id="hourlyForecast"></div>
+    </div>
+
+</div>
+
+<div class="footer">
+    🙏 Om Namo Venkatesaya 🙏<br>
+    Data: tirumalainfo.com • Auto-refreshes every 60 seconds<br>
+    TTD Smart Pilgrim System v2.0
+</div>
+
+<script>
+const API = "http://localhost:5000/api";
+
+async function loadDashboard() {
+    try {
+        // Fetch ALL endpoints in parallel
+        const [live, comps, outdoor, forecast] = await Promise.all([
+            fetch(`${API}/live`).then(r => r.json()),
+            fetch(`${API}/compartments`).then(r => r.json()),
+            fetch(`${API}/outdoor`).then(r => r.json()),
+            fetch(`${API}/forecast`).then(r => r.json())
+        ]);
+
+        // === HEADER ===
+        document.getElementById('lastUpdate').textContent =
+            `Updated: ${live.timestamp} • Source: ${live.source}`;
+
+        // === QUEUE START ===
+        document.getElementById('queueStart').textContent = live.queue_starts_at;
+        document.getElementById('waitNow').textContent = live.wait_if_join_now;
+
+        // === TICKET WAITS ===
+        document.getElementById('waitFree').textContent = live.wait_times.free_darshan;
+        document.getElementById('waitSsd').textContent  = live.wait_times.ssd_token;
+        document.getElementById('wait300').textContent  = live.wait_times.rs300;
+        document.getElementById('crowdEmoji').textContent = live.crowd_status.emoji;
+        document.getElementById('crowdLabel').textContent = live.crowd_status.label;
+
+        // === STATS ===
+        document.getElementById('pilgrimsWaiting').textContent =
+            live.pilgrims_waiting.toLocaleString();
+        document.getElementById('darshanDone').textContent =
+            live.darshan_completed.toLocaleString();
+        document.getElementById('compActive').textContent =
+            `${live.active_compartments}/${live.total_compartments}`;
+        document.getElementById('temp').textContent =
+            `${live.weather.temperature || '--'}°C`;
+
+        // === COMPARTMENT HEATMAP ===
+        const grid = document.getElementById('compGrid');
+        grid.innerHTML = '';
+        let currentFloor = '';
+
+        comps.compartments.forEach(c => {
+            if (c.floor !== currentFloor) {
+                currentFloor = c.floor;
+                const label = document.createElement('div');
+                label.className = 'floor-label';
+                label.textContent = `📌 ${currentFloor}`;
+                grid.appendChild(label);
+            }
+            const box = document.createElement('div');
+            box.className = 'comp-box ' + getCompClass(c.status);
+            box.innerHTML = `${c.number}<br><small>${c.percent}%</small>`;
+            box.title = `Compartment ${c.number}: ${c.people}/${c.capacity} people (${c.status})`;
+            grid.appendChild(box);
+        });
+
+        // === OUTDOOR SEGMENTS ===
+        const segDiv = document.getElementById('outdoorSegments');
+        segDiv.innerHTML = `
+            <div style="margin-bottom:10px; color:#888; font-size:13px;">
+                Queue tail: <b style="color:#FF6B00">${outdoor.tail_location}</b> |
+                Total system: <b>${outdoor.total_in_system.toLocaleString()}</b> people
+            </div>
+            ${makeSegment('📍 Krishnateja', outdoor.segments.krishnateja)}
+            ${makeSegment('⭕ Octopus', outdoor.segments.octopus)}
+            ${makeSegment('🌿 Silathoranam', outdoor.segments.silathoranam)}
+        `;
+
+        // === GUIDE ===
+        const g = live.location_guide;
+        document.getElementById('guideContent').innerHTML = g.simple ? `
+            <div class="guide-box"><b>ℹ️ What is it:</b> ${g.simple}</div>
+            <div class="guide-box"><b>📏 Distance:</b> ${g.distance}</div>
+            <div class="guide-box"><b>👀 Look for:</b> ${g.look_for}</div>
+            <div class="guide-box"><b>🚌 From Bus Stand:</b> ${g.from_bus}</div>
+            <div class="guide-box"><b>🚂 From Railway:</b> ${g.from_train}</div>
+            <div class="guide-box"><b>🏪 Facilities:</b> ${(g.facilities||[]).join(' | ')}</div>
+        ` : '<p>Guide loading...</p>';
+
+        // === ROUTE ===
+        document.getElementById('routeFlow').innerHTML =
+            live.journey_route.map((step, i) =>
+                (i > 0 ? '<span class="route-arrow">→</span>' : '') +
+                `<span class="route-step">${step}</span>`
+            ).join('');
+
+        // === HOURLY FORECAST ===
+        const hourlyDiv = document.getElementById('hourlyForecast');
+        const bestTime = forecast.best_time.time;
+        hourlyDiv.innerHTML = forecast.hourly.map(h => `
+            <div class="hour-box ${h.time === bestTime ? 'best' : ''}">
+                <div style="font-size:12px; color:#888;">${h.time}</div>
+                <div style="font-size:18px; font-weight:bold;">${h.status.emoji}</div>
+                <div style="font-size:14px;">${h.wait}</div>
+                ${h.time === bestTime ? '<div style="color:#00FF88; font-size:11px;">⭐ BEST</div>' : ''}
+            </div>
+        `).join('');
+
+    } catch (err) {
+        document.getElementById('lastUpdate').textContent =
+            '❌ API offline - is app.py running?';
+        console.error(err);
+    }
+}
+
+function getCompClass(status) {
+    if (status === 'FULL') return 'comp-full';
+    if (status === 'ALMOST FULL') return 'comp-almost';
+    if (status === 'PARTIAL') return 'comp-partial';
+    if (status === 'LOW') return 'comp-low';
+    return 'comp-empty';
+}
+
+function makeSegment(name, seg) {
+    const active = seg.people > 0;
+    return `
+        <div class="segment ${active ? 'seg-active' : 'seg-closed'}">
+            <span>${name}</span>
+            <b>${active ? seg.people.toLocaleString() + ' people' : seg.status}</b>
+        </div>
+    `;
+}
+
+// Load immediately + auto-refresh every 60 seconds
+loadDashboard();
+setInterval(loadDashboard, 60000);
+</script>
+
+</body>
+</html>

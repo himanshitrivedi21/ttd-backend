@@ -160,20 +160,115 @@ load();setInterval(load,60000);
 </script></body></html>"""
 
 PLACES_HTML = """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Places</title>
-<style>body{background:#0f1419;color:#fff;font-family:Arial;padding:12px;margin:0}
-.hd{background:linear-gradient(135deg,#FF6B00,#FF8C00);padding:16px;border-radius:12px;text-align:center;margin-bottom:12px}
-.c{background:#1a2332;border-radius:12px;margin-bottom:14px;overflow:hidden;border-left:4px solid #FF6B00}
-.i{padding:12px}.n{color:#FFD700;font-size:17px;font-weight:bold}.m{color:#00FF88;font-size:12px;margin:5px 0}.d{color:#ccc;font-size:13px;line-height:1.5}
-a{display:inline-block;background:#FF6B00;color:#fff;padding:8px 16px;border-radius:16px;text-decoration:none;font-size:13px;font-weight:bold;margin-top:6px}
-iframe{width:100%;height:200px;border:0}</style></head><body>
-<div class="hd"><h1 style="margin:0">🗺️ Sacred Places</h1>Tirumala & Tirupati</div>
-<div class="c"><div class="i"><div class="n">🛕 Sri Venkateswara Temple</div><div class="m">📍 Main Temple</div><div class="d">The divine Ananda Nilayam. Free Annaprasadam nearby all day.</div><a href="https://www.google.com/maps/dir/?api=1&destination=Sri+Venkateswara+Temple+Tirumala">🧭 Navigate (3D)</a></div><iframe loading="lazy" src="https://maps.google.com/maps?q=Sri+Venkateswara+Temple+Tirumala&z=16&output=embed"></iframe></div>
-<div class="c"><div class="i"><div class="n">🌿 Silathoranam</div><div class="m">📍 1 km • Natural Rock Arch</div><div class="d">Millions of years old natural arch. Best at sunset!</div><a href="https://www.google.com/maps/dir/?api=1&destination=Silathoranam+Tirumala">🧭 Navigate (3D)</a></div><iframe loading="lazy" src="https://maps.google.com/maps?q=Silathoranam+Tirumala&z=16&output=embed"></iframe></div>
-<div class="c"><div class="i"><div class="n">💧 Papavinasam</div><div class="m">📍 5 km • Holy Waterfall</div><div class="d">Sacred falls — a bath here washes away sins. Changing rooms available.</div><a href="https://www.google.com/maps/dir/?api=1&destination=Papavinasam+Tirumala">🧭 Navigate (3D)</a></div><iframe loading="lazy" src="https://maps.google.com/maps?q=Papavinasam+Tirumala&z=16&output=embed"></iframe></div>
-<div class="c"><div class="i"><div class="n">💧 Akasa Ganga</div><div class="m">📍 3 km • Temple Water Source</div><div class="d">Holy falls supplying water for the Lord's abhishekam. Serene, less crowded.</div><a href="https://www.google.com/maps/dir/?api=1&destination=Akasa+Ganga+Tirumala">🧭 Navigate (3D)</a></div><iframe loading="lazy" src="https://maps.google.com/maps?q=Akasa+Ganga+Tirumala&z=16&output=embed"></iframe></div>
-<div class="c"><div class="i"><div class="n">🐒 Japali Hanuman</div><div class="m">📍 5 km • Forest Temple</div><div class="d">Where Hanuman meditated. Quiet escape from crowds.</div><a href="https://www.google.com/maps/dir/?api=1&destination=Japali+Hanuman+Tirumala">🧭 Navigate (3D)</a></div><iframe loading="lazy" src="https://maps.google.com/maps?q=Japali+Hanuman+Temple+Tirumala&z=16&output=embed"></iframe></div>
-<div class="c"><div class="i"><div class="n">💧 Kapila Theertham</div><div class="m">📍 Tirupati • Waterfall + Shiva Temple</div><div class="d">Waterfall beside a Shiva temple. Best in monsoon!</div><a href="https://www.google.com/maps/dir/?api=1&destination=Kapila+Theertham+Tirupati">🧭 Navigate (3D)</a></div><iframe loading="lazy" src="https://maps.google.com/maps?q=Kapila+Theertham+Tirupati&z=16&output=embed"></iframe></div>
-<p style="text-align:center;color:#555;font-size:12px">🙏 Tap Navigate for full 3D in Google Maps 🙏</p>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0B0F19; color:#fff; font-family:'Segoe UI',Arial; padding:14px; }
+.hd {
+    background:linear-gradient(135deg,#FF6B00,#FFB347);
+    padding:22px 16px; border-radius:18px; text-align:center; margin-bottom:18px;
+    box-shadow:0 6px 20px rgba(255,107,0,.35);
+}
+.hd h1 { font-size:22px; letter-spacing:1px; }
+.hd p { font-size:13px; opacity:.95; margin-top:4px; }
+.sec { color:#FFB347; font-size:14px; font-weight:bold; letter-spacing:2px; margin:18px 4px 10px; }
+.card {
+    background:linear-gradient(145deg,#151D2E,#101827);
+    border-radius:18px; margin-bottom:18px; overflow:hidden;
+    border:1px solid rgba(255,255,255,.06);
+    box-shadow:0 4px 16px rgba(0,0,0,.4);
+}
+.map { width:100%; height:180px; border:0; display:block; }
+.body { padding:16px; }
+.top { display:flex; align-items:center; gap:12px; }
+.emoji {
+    font-size:26px; background:rgba(255,107,0,.15);
+    width:52px; height:52px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.name { color:#FFD700; font-size:17px; font-weight:bold; }
+.dist { color:#00FF88; font-size:12px; margin-top:3px; }
+.desc { color:#B9C2D0; font-size:13.5px; line-height:1.6; margin:12px 0; }
+.tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+.tag { background:rgba(0,191,255,.12); color:#7FD8FF; font-size:11px; padding:5px 10px; border-radius:20px; }
+.btn {
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    background:linear-gradient(135deg,#FF6B00,#FF8C00); color:#fff;
+    padding:13px; border-radius:12px; text-decoration:none;
+    font-size:14px; font-weight:bold;
+    box-shadow:0 4px 12px rgba(255,107,0,.3);
+}
+</style></head><body>
+
+<div class="hd"><h1>🗺️ SACRED PLACES</h1><p>Tirumala & Tirupati Darshan Guide</p></div>
+
+<div class="sec">🛕 ON THE HILL — TIRUMALA</div>
+
+<div class="card">
+<iframe class="map" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=79.338%2C13.678%2C79.356%2C13.690&layer=mapnik&marker=13.6838%2C79.3472"></iframe>
+<div class="body">
+<div class="top"><div class="emoji">🛕</div><div><div class="name">Sri Venkateswara Temple</div><div class="dist">📍 Main Temple • The Divine Destination</div></div></div>
+<div class="desc">The sacred Ananda Nilayam. Complete your darshan here. Free Annaprasadam served nearby all day.</div>
+<div class="tags"><span class="tag">🍛 Free Food</span><span class="tag">💧 Water</span><span class="tag">🚻 Toilets</span><span class="tag">🏥 Medical</span></div>
+<a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=Sri+Venkateswara+Swamy+Temple+Tirumala">🧭 Navigate in Google Maps (3D)</a>
+</div></div>
+
+<div class="card">
+<iframe class="map" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=79.330%2C13.678%2C79.348%2C13.692&layer=mapnik&marker=13.6851%2C79.3389"></iframe>
+<div class="body">
+<div class="top"><div class="emoji">🌿</div><div><div class="name">Silathoranam</div><div class="dist">📍 1 km from temple • Natural Wonder</div></div></div>
+<div class="desc">Rare natural rock arch, millions of years old — one of only 3 in the world! Beautiful garden viewpoint. Best at sunset.</div>
+<div class="tags"><span class="tag">📷 Photo Spot</span><span class="tag">🌅 Sunset</span><span class="tag">🌳 Garden</span></div>
+<a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=Silathoranam+Tirumala">🧭 Navigate in Google Maps (3D)</a>
+</div></div>
+
+<div class="card">
+<iframe class="map" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=79.310%2C13.690%2C79.335%2C13.706&layer=mapnik&marker=13.6978%2C79.3219"></iframe>
+<div class="body">
+<div class="top"><div class="emoji">💧</div><div><div class="name">Papavinasam Theertham</div><div class="dist">📍 5 km • Holy Waterfall</div></div></div>
+<div class="desc">Sacred waterfall — a bath here is believed to wash away sins. Separate changing rooms for men and women.</div>
+<div class="tags"><span class="tag">🚿 Holy Bath</span><span class="tag">👕 Changing Rooms</span></div>
+<a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=Papavinasam+Tirumala">🧭 Navigate in Google Maps (3D)</a>
+</div></div>
+
+<div class="card">
+<iframe class="map" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=79.330%2C13.700%2C79.355%2C13.716&layer=mapnik&marker=13.7082%2C79.3426"></iframe>
+<div class="body">
+<div class="top"><div class="emoji">💧</div><div><div class="name">Akasa Ganga</div><div class="dist">📍 3 km • Temple's Water Source</div></div></div>
+<div class="desc">Holy falls supplying water for the Lord's abhishekam. Serene and less crowded than Papavinasam.</div>
+<div class="tags"><span class="tag">🕊️ Peaceful</span><span class="tag">📷 Scenic</span></div>
+<a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=Akasa+Ganga+Tirumala">🧭 Navigate in Google Maps (3D)</a>
+</div></div>
+
+<div class="card">
+<iframe class="map" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=79.300%2C13.695%2C79.325%2C13.711&layer=mapnik&marker=13.7031%2C79.3122"></iframe>
+<div class="body">
+<div class="top"><div class="emoji">🐒</div><div><div class="name">Japali Hanuman Temple</div><div class="dist">📍 5 km • Peaceful Forest Temple</div></div></div>
+<div class="desc">Where Lord Hanuman meditated. Quiet forest setting — the perfect escape from the crowds.</div>
+<div class="tags"><span class="tag">🌲 Forest</span><span class="tag">🧘 Peaceful</span></div>
+<a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=Japali+Hanuman+Temple+Tirumala">🧭 Navigate in Google Maps (3D)</a>
+</div></div>
+
+<div class="sec">🛕 FOOT OF THE HILL — TIRUPATI</div>
+
+<div class="card">
+<iframe class="map" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=79.405%2C13.625%2C79.430%2C13.642&layer=mapnik&marker=13.6336%2C79.4173"></iframe>
+<div class="body">
+<div class="top"><div class="emoji">🛕</div><div><div class="name">Govindaraja Swamy Temple</div><div class="dist">📍 Tirupati City • Ancient Temple</div></div></div>
+<div class="desc">One of Tirupati's oldest temples with a stunning gopuram. Visit before or after Tirumala.</div>
+<div class="tags"><span class="tag">🏛️ Architecture</span><span class="tag">🙏 Ancient</span></div>
+<a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=Govindaraja+Swamy+Temple+Tirupati">🧭 Navigate in Google Maps (3D)</a>
+</div></div>
+
+<div class="card">
+<iframe class="map" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=79.380%2C13.605%2C79.405%2C13.622&layer=mapnik&marker=13.6133%2C79.3921"></iframe>
+<div class="body">
+<div class="top"><div class="emoji">💧</div><div><div class="name">Kapila Theertham</div><div class="dist">📍 Tirupati • Waterfall + Shiva Temple</div></div></div>
+<div class="desc">Beautiful waterfall falling right beside a Shiva temple. Absolutely stunning in monsoon!</div>
+<div class="tags"><span class="tag">🌊 Waterfall</span><span class="tag">🕉️ Shiva</span></div>
+<a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=Kapila+Theertham+Tirupati">🧭 Navigate in Google Maps (3D)</a>
+</div></div>
+
+<p style="text-align:center;color:#4A5568;font-size:12px;margin:14px">🙏 Navigate opens the real Google Maps app with 3D view 🙏</p>
 </body></html>"""
 
 ROOMS_HTML = """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rooms</title>
